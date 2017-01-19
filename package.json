@@ -1,7 +1,7 @@
 {
     "name": "express-send-stream",
     "description": "Module for Express 4.x to load large files via xhr",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "homepage": "https://github.com/jsrun/express-send-stream",
     "author": "André Ferreira <andrehrf@gmail.com>",
     "license": "MIT",

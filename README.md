@@ -11,7 +11,7 @@ Module for Express 4.x to load large files via xhr
 $ npm install express-send-stream
 ```
 
-## Usage
+## Server-side
 
 ```js
 var express = require('express'),
@@ -21,6 +21,52 @@ var express = require('express'),
 app.use(require('serve-static')(__dirname));
 app.get('/open', expressSendStream(__dirname + '/mybigfile.xml'));
 app.listen(3000);
+```
+
+## Client-side
+
+```js
+var xhr = new XMLHttpRequest();
+xhr.overrideMimeType("application/octet-stream");
+xhr.responseType = "arraybuffer";
+
+xhr.onprogress = function(progress){
+    document.querySelector(".progress").style.width = ((progress.loaded*100)/parseInt(xhr.getResponseHeader("File-size"))) + "%";
+};
+
+xhr.onload = function(v){
+    var byteArray = new Uint8Array(xhr.response);
+    renderStream(1, byteArray.byteLength, byteArray, 524288, "#code");
+};
+
+xhr.onerror = function (e) {
+    console.log(e);
+};
+
+xhr.open("GET", "/open", true);
+xhr.send();
+
+function renderStream(byteStart, byteLength, byteArray, byteBlock, elem){
+    var blockString = "";
+
+    if(byteStart+byteBlock > byteLength)
+        byteBlock = (byteLength - byteStart)-1;
+
+    for (var i = byteStart; i <= (byteStart+byteBlock); i++)
+        blockString += String.fromCharCode(byteArray[i]);
+
+    document.querySelector(elem).appendChild(document.createTextNode(blockString));
+    document.querySelector(".progress").style.width = ((byteStart+byteBlock)*100)/(byteLength-1) + "%";
+    //console.log(byteStart,(byteStart+byteBlock),byteLength,(((byteStart+byteBlock)*100)/(byteLength-1) + "%"));
+
+    if(byteStart+byteBlock < byteLength-1)
+        setTimeout(renderStream, 200, (byteStart+byteBlock)+1, byteLength, byteArray, byteBlock, elem);  
+    else{
+        var editor = ace.edit("code");
+        editor.setTheme("ace/theme/twilight");
+        editor.session.setMode("ace/mode/xml");
+    }
+}
 ```
 
 ## License
